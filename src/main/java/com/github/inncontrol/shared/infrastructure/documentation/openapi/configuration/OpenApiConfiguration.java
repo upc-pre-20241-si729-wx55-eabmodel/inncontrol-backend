@@ -8,10 +8,18 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import io.swagger.v3.oas.models.servers.Server;
+
+import java.util.Collections;
 
 @Configuration
 public class OpenApiConfiguration {
+
+    @Value("${spring.profiles.default}")
+    private String activeProfile;
+    
     @Bean
     public OpenAPI learningPlatformOpenApi() {
         // General configuration
@@ -25,6 +33,14 @@ public class OpenApiConfiguration {
                 .externalDocs(new ExternalDocumentation()
                         .description("Hotech platform wiki documentation")
                         .url("https://inncontrol-platform.wiki.github.io/docs"));
+
+         boolean isRunningInProd =  activeProfile.equals("prod");
+
+        if (isRunningInProd) {
+            openApi.servers(Collections.singletonList(new Server().url("https://inncontrol-api.ryzeon.me")));
+        } else {
+            openApi.servers(Collections.singletonList(new Server().url("http://localhost:8080")));
+        }
 
         final String securitySchemeName = "bearerAuth";
 

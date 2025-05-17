@@ -1,5 +1,6 @@
 package com.github.inncontrol.employees.application.internal.commandservices;
 
+import com.github.inncontrol.employees.domain.model.valueobjects.Role;
 import com.github.inncontrol.shared.application.internal.outboundedservices.acl.ExternalProfileService;
 import com.github.inncontrol.employees.domain.model.aggregates.Employee;
 import com.github.inncontrol.employees.domain.model.commands.AscendEmployeeCommand;
@@ -27,18 +28,17 @@ public class EmployeeCommandServiceImpl implements EmployeeCommandService {
     public Long handle(CreateEmployeeCommand command) {
         var profileId = externalProfileService.fetchProfileIdByEmail(command.email());
         if (profileId.isEmpty()) {
-            profileId = externalProfileService.createProfile(command.firstName(), command.lastName(), command.email(), command.street(), command.number(), command.city(), command.postalCode(), command.country());
+            profileId = externalProfileService.createProfile(command.firstName(), command.lastName(),command.phoneNumber(), command.email());
         } else {
             employeeRepository.findByProfileId(profileId.get()).ifPresent(student -> {
                 throw new IllegalArgumentException("Employee already exists");
             });
         }
         if (profileId.isEmpty()) throw new IllegalArgumentException("Unable to create profile");
-        var employee = new Employee(profileId.get(), command.salary(), command.contractInformation());
+        var role = Role.valueOf(command.role().toUpperCase());
+        var employee = new Employee(profileId.get(), command.salary(), command.contractInformation(), role);
         employeeRepository.save(employee);
         return employee.getId();
-
-
     }
 
     @Override
